@@ -18,18 +18,12 @@
        (apply map (comp abs -))
        (reduce +)))
 
-(defn single-num-similarity-score
-  [num v]
-  (->> v
-       (filter #{num})
-       count
-       (* num)))
-
 (defn similarity-score
   [v1 v2]
-  (->> v1
-       (map #(single-num-similarity-score % v2))
-       (reduce +)))
+  (let [freqs (frequencies v2)]
+    (->> v1
+         (map #(* % (get freqs % 0)))
+         (reduce +))))
 
 (comment
   ;;part 1
