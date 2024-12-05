@@ -14,3 +14,6 @@
   (is (false? (sut/report-safe? [8 6 4 4 1]))
       "Unsafe because 4 4 is neither an increase or a decrease.")
   (is (false? (sut/report-safe? [1 2 7 8 9]))))
+
+(deftest dampener-report-safe
+  (is (true? (sut/dampener-report-safe? [64 61 65 67 69]))))
