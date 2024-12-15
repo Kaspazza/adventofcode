@@ -23,59 +23,18 @@
                      acc)
              (rest rem)))))
 
-(defn- multiply-eq [equation]
-  (let [idx (.indexOf equation "*")
-        [l r] (split-at idx equation)
-        r (rest r)
-        num1 (last l)
-        num2 (first r)
-        new-eq (concat (butlast l) [(* num1 num2)] (rest r))]
-    new-eq))
-
-(defn- add-eq [equation]
-  (let [idx (.indexOf equation "+")
-        [l r] (split-at idx equation)
-        r (rest r)
-        num1 (last l)
-        num2 (first r)
-        new-eq (concat (butlast l) [(+ num1 num2)] (rest r))]
-    new-eq))
-
-#_(defn solve-equation [equation]
-  (loop [eq equation]
-    (cond (= (count eq) 1) (first eq)
-          (not= -1 (.indexOf eq "*")) (recur (multiply-eq eq))
-          (not= -1 (.indexOf eq "+")) (recur (add-eq eq))
-          :else eq)
-     ))
-
 (defn parse-equation [eq]
   (->> eq
        (re-seq #"\d+")
        (map parse-long)))
 
-#_(defn is-any-equal-sum? [sum nums]
-  (let [n (-> nums
-              count
-              dec)
-        operations ["+" "*"]
-        all-operation-options  (->> operations
-                                    (repeat n)
-                                    cartesian-product)
-        all-equations (map
-                       (fn [operations] (concat (interleave nums operations) [(last nums)]))
-                       all-operation-options)]
-    (map solve-equation all-equations)
-    #_(some #(= sum (solve-equation %)) all-equations))
-  )
-
 (defn solve-equation [ops nums]
   (loop [ops ops
          acc (first nums)
          nums (rest nums)]
-    (if (empty? ops) acc
-        (recur (rest ops) ((first ops) acc (first nums)) (rest nums) ))
-    ))
+    (if (empty? ops)
+      acc
+      (recur (rest ops) ((first ops) acc (first nums)) (rest nums)))))
 
 (defn is-any-equal-sum? [sum nums]
   (let [n (-> nums
@@ -84,12 +43,11 @@
         operations [+ *]
         all-operation-options  (->> operations
                                     (repeat n)
-                                    cartesian-product)] 
-    
-  (some
-   #(= sum (solve-equation % nums))
-   all-operation-options))
-  )
+                                    cartesian-product)]
+
+    (some
+     #(= sum (solve-equation % nums))
+     all-operation-options)))
 
 
 (comment
@@ -97,18 +55,12 @@
   (let [equations (-> puzzle-input
                       (str/split #"\n"))
         eqs (map parse-equation equations)]
-    (reduce 
+    (reduce
      (fn [acc x] (if (is-any-equal-sum? (first x) (rest x))
                    (+ acc (first x))
-                   acc
-                   ))
+                   acc))
      0
-     eqs)
-    #_(->> eqs
-           (map (fn [[sum & nums]] (if (is-any-equal-sum? sum nums)
-                                     sum 
-                                     nil)))) 
-    )
+     eqs))
   (let [equations (-> (slurp "src/kaspazza/2024/7/data.txt")
                       (str/split #"\n"))
         eqs (map parse-equation equations)]
@@ -117,8 +69,7 @@
                    (+ acc (first x))
                    acc))
      0
-     eqs)
-   )
+     eqs))
 
 
 ;; So basically what we have here is combinatorics. 
@@ -145,16 +96,5 @@
 ;;   => 10 * 19 * 25 + 5 
 ;;   => 10 * 19 + 25 * 5
 ;;   => 10 * 19 * 25 * 5
-  
-;; Now how to turn this vector  [10 + 19 * 25 * 5] 
-;; Into something we can execute? 
-;; First, we need to respect that multiplication is done before addition.
-;; So I would turn it into this:
-;;   [10 + 19 * 25 * 5] => [10 + 19 * [* 25 5]] => [10 + [* 19 [* 25 5]]]
-;; and then cover the addition also to prefix-notation 
-;;  [10 + [* 19 [* 25 5]]] => [+ 10 [* 19 [* 25 5]]]
-;; other ex [10 * 19 + 25 + 5] => [[* 10 19] + 25 + 5] => [+ [+ [* 10 19] 25] 5]  
-  
-;And then we would only need to execute it (e.g with pre-walk or smth). 
-  ;; Or more performant way, could be to reduce all 3 elements at once, so if I find 10 * 19, I already turn it into 190, than I don't have to walk over it twice
+
   )
