@@ -36,11 +36,10 @@
       acc
       (recur (rest ops) ((first ops) acc (first nums)) (rest nums)))))
 
-(defn is-any-equal-sum? [sum nums]
+(defn is-any-equal-sum? [operations sum nums]
   (let [n (-> nums
               count
               dec)
-        operations [+ *]
         all-operation-options  (->> operations
                                     (repeat n)
                                     cartesian-product)]
@@ -49,6 +48,8 @@
      #(= sum (solve-equation % nums))
      all-operation-options)))
 
+(defn || [n1 n2]
+  (parse-long (str n1 n2)))
 
 (comment
   ;;Part 1
@@ -56,7 +57,7 @@
                       (str/split #"\n"))
         eqs (map parse-equation equations)]
     (reduce
-     (fn [acc x] (if (is-any-equal-sum? (first x) (rest x))
+     (fn [acc x] (if (is-any-equal-sum? [+ *] (first x) (rest x))
                    (+ acc (first x))
                    acc))
      0
@@ -65,12 +66,30 @@
                       (str/split #"\n"))
         eqs (map parse-equation equations)]
     (reduce
-     (fn [acc x] (if (is-any-equal-sum? (first x) (rest x))
+     (fn [acc x] (if (is-any-equal-sum? [+ *] (first x) (rest x))
                    (+ acc (first x))
                    acc))
      0
      eqs))
-
+  ;;Part2
+   (let [equations (-> puzzle-input
+                      (str/split #"\n"))
+        eqs (map parse-equation equations)]
+    (reduce
+     (fn [acc x] (if (is-any-equal-sum? [+ * ||] (first x) (rest x))
+                   (+ acc (first x))
+                   acc))
+     0
+     eqs))
+   (let [equations (-> (slurp "src/kaspazza/2024/7/data.txt")
+                       (str/split #"\n"))
+        eqs (map parse-equation equations)]
+    (reduce
+     (fn [acc x] (if (is-any-equal-sum? [+ * ||] (first x) (rest x))
+                   (+ acc (first x))
+                   acc))
+     0
+     eqs))
 
 ;; So basically what we have here is combinatorics. 
 ;; We have N-1 places for operations where N is count of numbers (e.g. with 2 numbers it's 1 place, with 3 it's 2, with 4 it's 3)
