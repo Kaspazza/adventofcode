@@ -18,6 +18,14 @@
         closing-parens (get parens-count \))]
     (- opening-parens closing-parens)))
 
+
+(defn count-parens-better
+  [parens]
+  (let [parens-count (frequencies parens)
+        opening-parens (get parens-count \()
+        closing-parens (get parens-count \))]
+    (- opening-parens closing-parens)))
+
 (def basement -1)
 
 (defn find-basement
