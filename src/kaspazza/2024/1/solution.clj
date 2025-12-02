@@ -1,5 +1,6 @@
 (ns kaspazza.2024.1.solution
-  (:require [clojure.string :as str]))
+  (:require
+   [clojure.string :as str]))
 
 (def example-data [3 4 4 3 2 5 1 3 3 9 3 3])
 

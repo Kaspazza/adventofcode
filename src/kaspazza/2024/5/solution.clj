@@ -1,5 +1,6 @@
 (ns kaspazza.2024.5.solution
-  (:require [clojure.string :as str]))
+  (:require
+   [clojure.string :as str]))
 
 (def puzzle-input
   "47|53
@@ -37,9 +38,7 @@
   [rules]
   (->> (str/split rules #"\n")
        (map #(str/split % #"\|"))
-       (reduce (fn [acc [frule srule :as rule]]
-                 (update acc (str frule) conj (str srule)))
-         {})))
+       (reduce (fn [acc [frule srule :as rule]] (update acc (str frule) conj (str srule))) {})))
 
 (defn parse-orders
   [orders]
@@ -54,8 +53,8 @@
                 (reduced false)
                 (conj acc el))
               (conj acc el)))
-    []
-    order))
+          []
+          order))
 
 (defn- has-no-incoming?
   [node graph result]
@@ -64,9 +63,8 @@
 
 (defn- find-node-with-no-incoming
   [graph result]
-  (first (filter #(and (has-no-incoming? % graph result)
-                       (not (contains? (set result) %)))
-           (keys graph))))
+  (first (filter #(and (has-no-incoming? % graph result) (not (contains? (set result) %)))
+                 (keys graph))))
 
 (defn topological-sort
   [graph]
@@ -77,16 +75,6 @@
       (when-let [node (find-node-with-no-incoming graph result)]
         (recur (conj result node) (dec remaining-nodes))))))
 
-
-(defn solution-part-1
-  [s]
-  (let [[rules orders] (-> s
-                           (str/split #"\n\n"))]
-    (->> orders
-         parse-orders
-         (filter (partial valid-order? (parse-rules rules)))
-         (map (comp #(Integer/parseInt %) middle-el))
-         (reduce +))))
 
 (defn solution-part-2
   [s]
@@ -103,6 +91,22 @@
          (map (comp #(Integer/parseInt %) middle-el))
          (reduce +))))
 
+(->> "data.txt"
+     slurp
+     solution-part-2)
+
+(defn solution-part-1
+  [s]
+  (let [[rules orders] (-> s
+                           (str/split #"\n\n"))]
+    (->> orders
+         parse-orders
+         (filter (partial valid-order? (parse-rules rules)))
+         (map (comp #(Integer/parseInt %) middle-el))
+         (reduce +))))
+
+
+
 (comment
   (require '[clojure.string :as str])
   ;;Part 1
@@ -112,7 +116,7 @@
        solution-part-1)
   ;;Part 2
   (solution-part-2 puzzle-input)
-  (->> "src/kaspazza/2024/5/data.txt"
+  (->> "data.txt"
        slurp
        solution-part-2)
   ;
