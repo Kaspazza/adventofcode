@@ -1,15 +1,24 @@
-;;See [doc](https://github.com/kkinnear/zprint/blob/d0bb27e51ac97b1cdae5ea32b9b953f66cd650b2/doc/reference.md#introduction-to-configuration) for more details
-{:style [:community
-         :how-to-ns
-         :sort-require
+;;See [doc](https://github.com/kkinnear/zprint/blob/d0bb27e51ac97b1cdae5ea32b9b953f66cd650b2/doc/reference.md introduction-to-configuration) for more details
+{:style [:community ;;based on community guidelines
+         :how-to-ns ;;justify requires 
+         :sort-require ;;sort requires
          {:style-call :require-justify
-          :max-variance 1000}
-         :sort-dependencies
-         :backtranslate
-         :hiccup]
- :map {:comma? false
-       :force-nl? true}
- :width 100
- :pair {:force-nl? true}
- :pair-fn {:hang? false}
- :comment {:wrap? false}}
+          :max-variance 1000} ;; big number for variance, so it justifies it better, without breaking to many lines
+         :sort-dependencies ;;For deps.edn etc.
+         :backtranslate ;;transform (quote a) to 'a, (var a) to ;;'a, (clojure.core/deref a) to @a and (clojure.core/unquote a) to ~a
+         :hiccup ;;Recognizes hiccup and formats it differently than regular vector
+         ]
+ :map {:comma? false ;; No "," in maps
+       :force-nl? true ;; map on newline
+       }
+ :fn-map {"comment" [:none {:list {:respect-nl? true}}] ;; comment function just like regular comments not styled
+         } 
+ :width 100 ;; Max width, advised by clojure community guideline to be either 80/100/120
+ :pair {:force-nl? true} ;; Each pair on new line
+ :pair-fn {:hang? false} ;; In respect to function name e.g. (cond args) vs (cond
+ ;;                                                                               args). False makes it so that it we can have a one line functions if they don't break max width.
+ ;; ;; kind of comments should be not styled 
+  :comment
+   {:count? false, :inline-align-style :none, :inline? true, :wrap? false}
+
+}
