@@ -105,6 +105,53 @@
                          (some (fn [pr] (when (apply = (partition pr strn)) strn))))))))
          (remove nil?))))
 
+(range (count "10") (inc (count "20")))
+
+(defn invalid-ids-part2-optimized
+  "Optimized version that generates candidates instead of checking every number"
+  [start end]
+  (let [start-num (parse-long start)
+        end-num (parse-long end)
+        min-len (count start)
+        max-len (count end)
+        length-range (range min-len (inc max-len))]
+    (->>
+      length-range
+      (mapcat
+       (fn [num-len]
+         (->>
+           ;; For each length (in case end num has more digits)
+           (range 1 (inc num-len))
+           (mapcat
+            (fn [pattern-len]
+              (let [repeat-count (quot num-len pattern-len)]
+                (when (and (> repeat-count 1) (zero? (mod num-len pattern-len)))
+                  ;; Based on dividors (e.g. number like: xxxx -> (x|x|x|x and xx | xx)
+                  (let [min-pattern (if (= pattern-len 1)
+                                      0
+                                      (parse-long (apply str "1" (repeat (dec pattern-len) "0"))))
+                        max-pattern (parse-long (apply str (repeat pattern-len "9")))]
+                    (->> (range min-pattern (inc max-pattern))
+                         (keep
+                          (fn [pattern]
+                            ;; parse number pattern to real number
+                            (let [pattern-str (str pattern)]
+                              (when (= (count pattern-str) pattern-len)
+                                (let [repeated-str (apply str (repeat repeat-count pattern-str))
+                                      repeated-num (parse-long repeated-str)]
+                                  (when (and (>= repeated-num start-num) (<= repeated-num end-num))
+                                    repeated-num)))))))))))))))
+      distinct)))
+
+(->> (-> "src/kaspazza/2025/2/data.txt"
+         slurp
+         (str/replace #"\r?\n" "")
+         (str/split #","))
+     (map #(str/split % #"-"))
+     (map #(apply invalid-ids-part2-optimized %))
+     flatten
+     (apply +))
+
 (comment
  (->>
    (str/split example #",")
@@ -112,6 +159,7 @@
    (map #(apply invalid-ids %))
    flatten
    (apply +))
+ #_1227775554
 
  (->> (-> "src/kaspazza/2025/2/data.txt"
           slurp
@@ -135,6 +183,17 @@
    (apply +))
  #_4174379265
 
+
+ (->>
+   (str/split example #",")
+   (map #(str/split % #"-"))
+   (map #(apply invalid-ids-part2-optimized %))
+   flatten
+   (apply +)
+ )
+ #_4174379265
+
+
  (->> (-> "src/kaspazza/2025/2/data.txt"
           slurp
           (str/replace #"\r?\n" "")
@@ -145,5 +204,126 @@
       (map parse-long)
       (apply +))
 
+ (->>
+   (-> "src/kaspazza/2025/2/data.txt"
+       slurp
+       (str/replace #"\r?\n" "")
+       (str/split #","))
+   (map #(str/split % #"-"))
+   (map #(apply invalid-ids-part2-optimized %))
+   flatten
+   (apply +)
+ )
+ #_40028128307
+
+)
+
+;; regex version
+
+
+(def part-1-regex #"^(.+)\1$")
+
+(def part-2-regex #"^(.+)\1+$")
+
+(defn process-data
+  [re data]
+  (->> data
+       (mapcat #(range (parse-long (first %)) (inc (parse-long (second %)))))
+       (map str)
+       (map #(re-find re %))
+       (remove nil?)
+       (map first)
+       (map parse-long)
+       (reduce + 0)))
+
+
+(comment
+ (->>
+   (str/split example #",")
+   (map #(str/split % #"-"))
+   (process-data part-1-regex))
+ #_1227775554
+
+ (->>
+   (-> "src/kaspazza/2025/2/data.txt"
+       slurp
+       (str/replace #"\r?\n" "")
+       (str/split #",")
+   )
+   (map #(str/split % #"-"))
+   (process-data part-1-regex))
+ #_28146997880
+
+
+ #_28146997880
+
+ (->>
+   (str/split example #",")
+   (map #(str/split % #"-"))
+   (process-data part-2-regex))
+ #_4174379265
+
+
+ #_4174379265
+
+ (->>
+   (-> "src/kaspazza/2025/2/data.txt"
+       slurp
+       (str/replace #"\r?\n" "")
+       (str/split #",")
+   )
+   (map #(str/split % #"-"))
+   (process-data part-2-regex))
+ #_40028128307
+
+)
+
+;; Performance comparison utilities
+
+(defn benchmark
+  [f iterations]
+  (let [start (System/nanoTime)
+        _ (dotimes [_ iterations] (f))
+        end (System/nanoTime)]
+    (/ (- end start) 1e6 iterations))) ;; returns avg time in milliseconds
+
+(defn compare-performance
+  []
+  (let [data (->> (-> (slurp "src/kaspazza/2025/2/data.txt")
+                      (str/replace #"\r?\n" "")
+                      (str/split #","))
+                  (map #(str/split % #"-")))
+        iterations 10]
+    (println "=== Part 1 Performance Comparison ===")
+        (println "Running each implementation" iterations "times...\n")
+      ;; Part 1 - My approach
+      (let [math-time (benchmark (fn []
+                                   (->> data
+                                        (map (fn [pair] (apply invalid-ids pair)))
+                                        flatten
+                                        (apply +)))
+                                 iterations)]
+        (println "Mathematical approach:" (format "%.2f ms" math-time)))
+    ;; Part 1 - Regex approach
+    (let [regex-time (benchmark (fn [] (process-data part-1-regex data)) iterations)]
+      (println "Regex approach:       " (format "%.2f ms" regex-time)))
+    (println "\n=== Part 2 Performance Comparison ===")
+    (println "Running each implementation" iterations "times...\n")
+    ;; Part 2 - My approach
+    (let [math-time (benchmark (fn []
+                                 (->> data
+                                      (map (fn [pair] (apply invalid-ids-part2-optimized pair)))
+                                      flatten
+                                      ;; (map parse-long)
+                                      (apply +)))
+                               iterations)]
+      (println "Mathematical approach:" (format "%.2f ms" math-time)))
+    ;; Part 2 - Regex approach
+    (let [regex-time (benchmark (fn [] (process-data part-2-regex data)) iterations)]
+      (println "Regex approach:       " (format "%.2f ms" regex-time)))))
+
+(comment
+ ;; Run performance comparison
+ (compare-performance)
 )
 
